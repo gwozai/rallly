@@ -1,0 +1,26 @@
+{
+  "name": "@rallly/posthog",
+  "version": "0.0.0",
+  "private": true,
+  "exports": {
+    "./server": "./src/server/index.ts",
+    "./client": "./src/client/index.ts",
+    "./next/middleware": "./src/next/middleware.ts"
+  },
+  "scripts": {
+    "lint": "eslint ./src",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "posthog-js": "^1.178.0",
+    "posthog-node": "^4.2.1"
+  },
+  "devDependencies": {
+    "@rallly/eslint-config": "*",
+    "@rallly/tsconfig": "*"
+  },
+  "peerDependencies": {
+    "next": "^14.2.13",
+    "react": "^18.2.0"
+  }
+}

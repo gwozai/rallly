@@ -1,78 +1,94 @@
 name: CI
-on: pull_request
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
+  type-check:
+    name: Type check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-node
+      - uses: ./.github/actions/yarn-install
+
+      - name: Check types
+        run: yarn type-check
+
+  sherif:
+    name: Sherif
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-node
+
+      - name: Run sherif
+        run: npx sherif@latest
+
   linting:
     name: Linting
     runs-on: ubuntu-latest
     steps:
-      - name: Check out repository code
-        uses: actions/checkout@v2
-
-      - name: Setup node
-        uses: actions/setup-node@v2
-        with:
-          node-version: 16
-          cache: yarn
-
-      - name: Install dependencies
-        run: yarn install --frozen-lockfile
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-node
+      - uses: ./.github/actions/yarn-install
 
       - name: Check linting rules
         run: yarn lint
 
-      - name: Check types
-        run: yarn lint:tsc
+  unit-tests:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-node
+      - uses: ./.github/actions/yarn-install
+
+      - name: Run tests
+        run: yarn test:unit
 
   # Label of the container job
   integration-tests:
-    name: Run tests
-    # Containers must run in Linux based operating systems
+    name: Integration tests
     runs-on: ubuntu-latest
-
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5450/rallly
+      DIRECT_DATABASE_URL: postgresql://postgres:postgres@localhost:5450/rallly
+      CI: true
     steps:
-      # Downloads a copy of the code in your repository before running CI tests
-      - name: Check out repository code
-        uses: actions/checkout@v2
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-node
+      - uses: ./.github/actions/yarn-install
 
-      - name: Setup node
-        uses: actions/setup-node@v2
-        with:
-          node-version: 16
-          cache: yarn
-
-      - name: Set environment variables
-        run: |
-          echo "DATABASE_URL=postgresql://postgres:password@localhost:5432/db" >> $GITHUB_ENV
-          echo "SECRET_PASSWORD=abcdefghijklmnopqrstuvwxyz1234567890" >> $GITHUB_ENV
-
-      - name: Install dependencies
-        run: yarn install --frozen-lockfile
-
-      - name: Run db
-        run: |
-          docker pull postgres:14.2
-          docker run -d -p 5432:5432 -e POSTGRES_PASSWORD=password -e POSTGRES_DB=db postgres:14.2
-          yarn wait-on --timeout 60000 tcp:localhost:5432
-
-      - name: Build
-        run: yarn build
-
-      - name: Deploy migrations
-        run: yarn prisma migrate deploy
+      - name: Install system dependencies
+        run: sudo apt-get update
 
       - name: Install playwright dependencies
         run: yarn playwright install --with-deps chromium
 
-      - name: Launch app
-        run: yarn start 2>&1 & # backgrounnd mode
+      - name: Create production build
+        run: yarn turbo build:test --filter=@rallly/web
+
+      - name: Start services
+        run: yarn docker:up
+
+      - name: Setup database
+        run: yarn db:deploy
 
       - name: Run tests
-        run: yarn test
+        run: yarn turbo test:integration
 
       - name: Upload artifact playwright-report
         if: ${{ success() || failure() }}
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: playwright-report
-          path: ./playwright-report
+          path: ./apps/web/playwright-report

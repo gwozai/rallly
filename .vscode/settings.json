@@ -1,6 +1,14 @@
 {
   "editor.codeActionsOnSave": {
-    "source.fixAll": true
+    "source.fixAll": "explicit"
   },
-  "typescript.tsdk": "node_modules/typescript/lib"
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "typescript.preferences.importModuleSpecifier": "shortest",
+  "cSpell.words": ["Rallly", "Vella"],
+  "jestrunner.codeLensSelector": "",
+  "vitest.filesWatcherInclude": "**/*.test.ts",
+  "editor.formatOnSave": true,
+  "typescript.preferences.preferTypeOnlyAutoImports": true,
+  "typescript.tsserver.log": "verbose",
+  "typescript.tsserver.trace": "messages"
 }

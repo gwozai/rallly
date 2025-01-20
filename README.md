@@ -1,10 +1,20 @@
-[![Actions Status](https://github.com/lukevella/rallly/workflows/ci/badge.svg)](https://github.com/lukevella/rallly/actions)
+<div align="center">
+  
+<img src="./assets/images/logo-color.svg" width="200px" alt="Rallly" />
+
+</div>
+<br />
+<div align="center">
+  
+[![Actions Status](https://github.com/lukevella/rallly/workflows/CI/badge.svg?branch=main)](https://github.com/lukevella/rallly/actions)
 [![Crowdin](https://badges.crowdin.net/rallly/localized.svg)](https://crowdin.com/project/rallly)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-orange.svg)](https://www.gnu.org/licenses/agpl-3.0)
 [![Discord](https://img.shields.io/badge/-Join%20Chat-7289DA?logo=discord&logoColor=white)](https://discord.gg/uzg4ZcHbuM)
 [![Donate](https://img.shields.io/badge/-Donate%20with%20Paypal-white?logo=paypal)](https://www.paypal.com/donate/?hosted_button_id=7QXP2CUBLY88E)
 
-![hero](./docs/images/hero-image.png)
+</div>
+
+<img src="./assets/images/splash.png" alt="Rallly" />
 
 Schedule group meetings with friends, colleagues and teams. Create meeting polls to find the best date and time to organize an event based on your participants' availability. Save time and avoid back-and-forth emails.
 
@@ -12,70 +22,76 @@ Built with [Next.js](https://github.com/vercel/next.js/), [Prisma](https://githu
 
 ## Self-hosting
 
-Check out the [self-hosting repo](https://github.com/lukevella/rallly-selfhosted) for more information on running your own instance of Rallly.
+Check out the [self-hosting docs](https://support.rallly.co/self-hosting) for more information on running your own instance of Rallly.
 
-_[2023-01-12]: The docker configuration for self-hosters previously stored in this repo has been moved to the self-hosting repo mentioned above. Please switch to that repo if you are self-hosting._
+## Local Installation
 
-## Running locally
+The following instructions are for running the project locally for development.
 
-Clone this repo and change directory to the root of the repository.
+1. Clone the repository and switch to the project directory
 
-```bash
-git clone https://github.com/lukevella/rallly.git
-cd rallly
-```
+   ```bash
+   git clone https://github.com/lukevella/rallly.git
+   cd rallly
+   ```
 
-Copy the sample `.env` file then open it and set the variables.
+2. Install dependencies
 
-```bash
-cp sample.env .env
-```
+   ```bash
+   yarn
+   ```
 
-_See [configuration](#configuration) to see what parameters are availble._
+3. Setup environment variables
 
-Install dependencies
+   Create a `.env` file by copying `.env.development`. This will be were you can set your [configuration options](https://support.rallly.co/self-hosting/configuration-options).
 
-```
-yarn
-```
+   ```bash
+   cp .env.development .env
+   ```
 
-Next, run the database migrations to create our schema
+   **Note:** `.env.development` is preconfigured with default values for development. You can leave these as is for local development.
 
-```
-yarn prisma migrate deploy
-```
+4. Generate Prisma client
 
-Start the Next.js server
+   ```bash
+   yarn db:generate
+   ```
 
-```
-# For development
-yarn dev
-# For production
-yarn build
-yarn start
-```
+5. Setup database
 
-## Configuration
+   You will need to have [Docker](https://docs.docker.com/get-docker/) installed and running to run the database using the provided docker-compose file.
 
-| Parameter            | Default                                        | Description                                                                                                                         |
-| -------------------- | ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| NEXT_PUBLIC_BASE_URL | http://localhost:3000                          | The hosting url of the server, used for creating links and making api calls from the client.                                        |
-| DATABASE_URL         | - | A postgres database URL. Leave out if using the docker-compose file since it will spin up and connect to its own database instance. |
-| SECRET_PASSWORD      | -                                              | A long string (minimum 32 characters) that is used to encrypt session data.                                                         |
-| SUPPORT_EMAIL        | -                                              | An email address that will appear as the FROM email for all emails being sent out.                                                  |
-| SMTP_HOST            | -                                              | Host name of your SMTP server                                                                                                       |
-| SMTP_PORT            | -                                              | Port of your SMTP server                                                                                                            |
-| SMTP_SECURE          | false                                          | Set to "true" if SSL is enabled for your SMTP connection                                                                            |
-| SMTP_USER            | -                                              | Username to use for your SMTP connection                                                                                            |
-| SMTP_PWD             | -                                              | Password to use for your SMTP connection                                                                                            |
+   To start the database, run:
+
+   ```bash
+   yarn docker:up
+   ```
+
+   Next run the following command to setup the database:
+
+   ```bash
+   yarn db:reset
+   ```
+
+   This will:
+
+   - delete the existing database (if it exists)
+   - run migrations to create a new database schema
+   - seed the database with test users and random data
+
+6. Start the Next.js server
+
+   ```bash
+   yarn dev
+   ```
 
 ## Contributors
 
-If you would like to contribute to the development of the project please reach out first before spending significant time on it.
+Please read our [contributing guide](CONTRIBUTING.md) to learn about how to contribute to this project.
 
-### Translators 🇫🇷 🇩🇪 🇮🇹 🇪🇸
+### Translators 🌐
 
-You can help translate Rallly to another language by following our [guide for translators](https://github.com/lukevella/rallly/wiki/Guide-for-translators).
+You can help translate Rallly to another language by following our [guide for translators](https://support.rallly.co/contribute/translations).
 
 ## License
 
@@ -83,17 +99,28 @@ Rallly is open-source under the GNU Affero General Public License Version 3 (AGP
 
 ## Sponsors
 
-Big thanks to these folks for sponsoring the project!
+Thank you to our sponsors for making this project possible.
 
-<a href="https://github.com/cpnielsen" target="_blank"><img src="https://avatars.githubusercontent.com/u/1258576?v=4" width="32" height="32" /></a>&nbsp;
-<a href="https://github.com/Daedalus3" target="_blank"><img src="https://avatars.githubusercontent.com/u/5649239?v=4" width="32" height="32" /></a>&nbsp;
-<a href="https://github.com/iamericfletcher" target="_blank"><img src="https://avatars.githubusercontent.com/u/64165327?v=4" width="32" height="32" /></a>&nbsp;
-<a href="https://github.com/richb-hanover" target="_blank"><img src="https://avatars.githubusercontent.com/u/1094930?v=4" width="32" height="32" /></a>&nbsp;
+<a href="https://github.com/coderabbitai" target="_blank"><img src="https://avatars.githubusercontent.com/u/132028505?s=200&v=4" width="48" height="48" /></a>&nbsp;
+<a href="https://github.com/cpnielsen" target="_blank"><img src="https://avatars.githubusercontent.com/u/1258576?v=4" width="48" height="48" /></a>&nbsp;
+<a href="https://github.com/iamericfletcher" target="_blank"><img src="https://avatars.githubusercontent.com/u/64165327?v=4" width="48" height="48" /></a>&nbsp;
+<a href="https://github.com/arcticFox-git" target="_blank"><img src="https://avatars.githubusercontent.com/u/86988982?v=4" width="48" height="48" /></a>&nbsp;
+<a href="https://github.com/zakwear" target="_blank"><img src="https://avatars.githubusercontent.com/u/55545774?v=4" width="48" height="48" /></a>&nbsp;
+<a href="https://github.com/jonnymarshall" target="_blank"><img src="https://avatars.githubusercontent.com/u/42963069?v=4" width="48" height="48" /></a>&nbsp;
+<a href="https://github.com/maximelouet" target="_blank"><img src="https://avatars.githubusercontent.com/u/8074940?v=4" width="48" height="48" /></a>&nbsp;
 
-And thanks to these companies for providing their services to host and run [rallly.co](https://rallly.co).
+[Become a sponsor &rarr;](https://github.com/sponsors/lukevella)
 
-<a href="https://vercel.com/?utm_source=rallly&utm_campaign=oss"><img src="public/vercel-logotype-dark.svg" alt="Powered by Vercel" height="30" /></a>
-&nbsp;&nbsp;&nbsp;
-<a href="https://m.do.co/c/f91efc9c9e50"><img src="public/digitalocean.svg" alt="Digital Ocean" height="30" /></a>
-&nbsp;&nbsp;&nbsp;
-<a href="https://sentry.io"><img src="public/sentry.svg" alt="Sentry" height="30" /></a>
+And thank you to these companies for sponsoring and showing support for this project.
+
+<p>
+<a href="https://appwrite.io?utm_source=rallly"><img src="./assets/images/appwrite.svg" alt="appwrite" height="24" /></a>&nbsp;&nbsp;&nbsp;<!--
+--><a href="https://vercel.com/?utm_source=rallly&utm_campaign=oss"><img src="./assets/images/vercel-logotype-dark.svg#gh-light-mode-only" alt="Powered by Vercel" height="24" /></a>&nbsp;&nbsp;&nbsp;<!--
+--><a href="https://ura.design?utm_source=rallly"><img height="24" alt="Ura Design" src="./assets/images/ura-logo-blue.svg"></a>
+</p>
+<p>
+<a href="https://m.do.co/c/f91efc9c9e50"><img src="./assets/images/digitalocean-logo.svg" alt="Digital Ocean" height="24" /></a>&nbsp;&nbsp;&nbsp;<!--
+--><a href="https://sentry.io?utm_source=rallly"><img src="./assets/images/sentry.svg" alt="Sentry" height="24" /></a>&nbsp;&nbsp;&nbsp;<!--
+--><a href="https://cloudron.io?utm_source=rallly"><img src="./assets/images/cloudron-logo.svg" alt="Cloudron" height="30"></a>&nbsp;&nbsp;&nbsp;<!--
+--><a href="https://featurebase.app?utm_source=rallly"><img src="./assets/images/featurebase.svg" alt="Featurebase" height="28"></a>
+</p>
