@@ -1,18 +1,20 @@
 import { PageIcon } from "@/app/components/page-icons";
-import {
-  PageContainer,
-  PageContent,
-  PageHeader,
-  PageTitle,
-} from "@/app/components/page-layout";
 import { requireAdmin } from "@/auth/queries";
+import {
+  FullWidthLayout,
+  FullWidthLayoutContent,
+  FullWidthLayoutHeader,
+  FullWidthLayoutTitle,
+} from "@/components/full-width-layout";
 import { Trans } from "@/components/trans";
 import { getLicense } from "@/features/licensing/queries";
 import { prisma } from "@rallly/database";
 import { cn } from "@rallly/ui";
+import { Icon } from "@rallly/ui/icon";
 import { Tile, TileGrid, TileTitle } from "@rallly/ui/tile";
 import {
   GaugeIcon,
+  InfinityIcon,
   KeySquareIcon,
   SettingsIcon,
   UsersIcon,
@@ -29,24 +31,30 @@ async function loadData() {
 
   return {
     userCount,
-    userLimit: license?.seats ?? 1,
-    tier: license?.type,
+    license,
   };
 }
 
 export default async function AdminPage() {
-  const { userCount, userLimit, tier } = await loadData();
+  const { userCount, license } = await loadData();
+
+  const userLimit = license?.seats ?? 1;
+  const tier = license?.type;
+
   return (
-    <PageContainer>
-      <PageHeader>
-        <PageTitle>
-          <PageIcon color="indigo">
-            <GaugeIcon />
-          </PageIcon>
+    <FullWidthLayout>
+      <FullWidthLayoutHeader>
+        <FullWidthLayoutTitle
+          icon={
+            <PageIcon size="sm" color="indigo">
+              <GaugeIcon />
+            </PageIcon>
+          }
+        >
           <Trans i18nKey="controlPanel" defaults="Control Panel" />
-        </PageTitle>
-      </PageHeader>
-      <PageContent className="space-y-8">
+        </FullWidthLayoutTitle>
+      </FullWidthLayoutHeader>
+      <FullWidthLayoutContent>
         <div className="space-y-4">
           <h2 className="text-muted-foreground text-sm">
             <Trans i18nKey="homeNavTitle" defaults="Navigation" />
@@ -77,9 +85,13 @@ export default async function AdminPage() {
                         values={{ count: userCount }}
                       />
                       /
-                      {userLimit === Number.POSITIVE_INFINITY
-                        ? "unlimited"
-                        : userLimit}
+                      {userLimit === Number.POSITIVE_INFINITY ? (
+                        <Icon className="inline-flex">
+                          <InfinityIcon />
+                        </Icon>
+                      ) : (
+                        userLimit
+                      )}
                     </span>
                   </div>
                 </div>
@@ -122,8 +134,8 @@ export default async function AdminPage() {
             </Tile>
           </TileGrid>
         </div>
-      </PageContent>
-    </PageContainer>
+      </FullWidthLayoutContent>
+    </FullWidthLayout>
   );
 }
 
