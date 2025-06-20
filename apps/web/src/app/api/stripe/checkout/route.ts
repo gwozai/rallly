@@ -5,7 +5,11 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { auth } from "@/next-auth";
+import { getActiveSpace, requireUser } from "@/auth/queries";
+import type {
+  SubscriptionCheckoutMetadata,
+  SubscriptionMetadata,
+} from "@/features/subscription/schema";
 
 const inputSchema = z.object({
   period: z.enum(["monthly", "yearly"]).optional(),
@@ -14,48 +18,31 @@ const inputSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
-  const userSession = await auth();
+  const user = await requireUser();
   const formData = await request.formData();
-  const { period = "monthly", return_path } = inputSchema.parse(
-    Object.fromEntries(formData.entries()),
-  );
+  const data = inputSchema.safeParse(Object.fromEntries(formData.entries()));
 
-  if (!userSession?.user || userSession.user?.email === null) {
-    // You need to be logged in to subscribe
-    return NextResponse.redirect(
-      new URL(
-        `/login${
-          return_path ? `?redirect=${encodeURIComponent(return_path)}` : ""
-        }`,
-        request.url,
-      ),
-      303,
-    );
+  if (!data.success) {
+    return NextResponse.json(data.error, { status: 400 });
   }
 
-  const user = await prisma.user.findUnique({
+  const { period, return_path } = data.data;
+
+  let customerId: string;
+
+  const res = await prisma.user.findUniqueOrThrow({
     where: {
-      id: userSession.user.id,
+      id: user.id,
     },
     select: {
-      email: true,
-      name: true,
       customerId: true,
-      subscription: {
-        select: {
-          active: true,
-        },
-      },
     },
   });
 
-  if (!user) {
-    return new NextResponse(null, { status: 404 });
-  }
-
-  let customerId = user.customerId;
-
-  if (!customerId) {
+  if (res.customerId) {
+    customerId = res.customerId;
+  } else {
+    // create a new customer in stripe
     const customer = await stripe.customers.create({
       email: user.email,
       name: user.name,
@@ -63,7 +50,7 @@ export async function POST(request: NextRequest) {
 
     await prisma.user.update({
       where: {
-        id: userSession.user.id,
+        id: user.id,
       },
       data: {
         customerId: customer.id,
@@ -73,7 +60,7 @@ export async function POST(request: NextRequest) {
     customerId = customer.id;
   }
 
-  if (user.subscription?.active === true) {
+  if (user.isPro) {
     // User already has an active subscription. Take them to customer portal
     return NextResponse.redirect(
       new URL("/api/stripe/portal", request.url),
@@ -83,7 +70,11 @@ export async function POST(request: NextRequest) {
 
   const proPricingData = await getProPricing();
 
-  const session = await stripe.checkout.sessions.create({
+  const space = await getActiveSpace();
+
+  const spaceId = space.id;
+
+  const checkoutSession = await stripe.checkout.sessions.create({
     success_url: absoluteUrl(
       return_path ?? "/api/stripe/portal?session_id={CHECKOUT_SESSION_ID}",
     ),
@@ -100,12 +91,14 @@ export async function POST(request: NextRequest) {
       enabled: true,
     },
     metadata: {
-      userId: userSession.user.id,
-    },
+      userId: user.id,
+      spaceId,
+    } satisfies SubscriptionCheckoutMetadata,
     subscription_data: {
       metadata: {
-        userId: userSession.user.id,
-      },
+        userId: user.id,
+        spaceId,
+      } satisfies SubscriptionMetadata,
     },
     line_items: [
       {
@@ -128,9 +121,9 @@ export async function POST(request: NextRequest) {
     },
   });
 
-  if (session.url) {
+  if (checkoutSession.url) {
     // redirect to checkout session
-    return NextResponse.redirect(session.url, 303);
+    return NextResponse.redirect(checkoutSession.url, 303);
   }
 
   return NextResponse.json(

@@ -50,14 +50,17 @@ model User {
   banReason     String?     @map("ban_reason")
   role          UserRole    @default(user)
 
-  comments              Comment[]
-  polls                 Poll[]
-  watcher               Watcher[]
-  events                Event[]
-  accounts              Account[]
-  participants          Participant[]
-  paymentMethods        PaymentMethod[]
-  subscription          Subscription?          @relation("UserToSubscription")
+  comments       Comment[]
+  polls          Poll[]
+  watcher        Watcher[]
+  accounts       Account[]
+  participants   Participant[]
+  paymentMethods PaymentMethod[]
+  subscription   Subscription?   @relation("UserToSubscription")
+
+  spaces   Space[]       @relation("UserSpaces")
+  memberOf SpaceMember[]
+
   pollViews             PollView[]
   scheduledEvents       ScheduledEvent[]
   scheduledEventInvites ScheduledEventInvite[]

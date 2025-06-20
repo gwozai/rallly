@@ -1,3 +1,4 @@
+import { getDefaultSpace } from "@/features/spaces/queries";
 import { getUser } from "@/features/user/queries";
 import { auth } from "@/next-auth";
 import { notFound, redirect } from "next/navigation";
@@ -33,4 +34,10 @@ export const requireAdmin = cache(async () => {
   }
 
   return user;
+});
+
+export const getActiveSpace = cache(async () => {
+  const user = await requireUser();
+
+  return await getDefaultSpace({ ownerId: user.id });
 });

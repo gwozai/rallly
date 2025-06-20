@@ -17,40 +17,26 @@ import {
   PageHeader,
   PageTitle,
 } from "@/app/components/page-layout";
-import { requireUser } from "@/auth/queries";
+import { getActiveSpace } from "@/auth/queries";
 import { Trans } from "@/components/trans";
 import { IfCloudHosted } from "@/contexts/environment";
+import { getUpcomingEventsCount } from "@/features/scheduled-event/queries";
 import { getTranslation } from "@/i18n/server";
 import { prisma } from "@rallly/database";
 import { FeedbackAlert } from "./feedback-alert";
 
 async function loadData() {
-  const user = await requireUser();
+  const space = await getActiveSpace();
 
-  if (!user) {
-    return {
-      livePollCount: 0,
-      upcomingEventCount: 0,
-    };
-  }
-
-  const now = new Date();
   const [livePollCount, upcomingEventCount] = await Promise.all([
     prisma.poll.count({
       where: {
-        userId: user.id,
+        spaceId: space.id,
         status: "live",
         deleted: false,
       },
     }),
-    prisma.event.count({
-      where: {
-        userId: user.id,
-        start: {
-          gte: now,
-        },
-      },
-    }),
+    getUpcomingEventsCount(),
   ]);
 
   return {
